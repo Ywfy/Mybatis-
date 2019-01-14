@@ -226,7 +226,7 @@ public class MyBatisTest {
 		return sqlSessionFactory;
 	}
   
-  @Test
+        @Test
 	public void test01() throws IOException{
 		//1、获取sqlSessionfactory
 		SqlSessionFactory sqlSessionFactory = getSqlSessionFactory();
