@@ -154,3 +154,169 @@ select * from tb1_employee order by ${f_name} ${order}
 		2、jdbcTypeForNull=NULL<br>
 			<setting name="jdbcTypeForNull" value="NULL"/><br>
 
+
+
+<br><br><br>
+## mapper结果返回
+### 1、简单类型返回值
+Mybatis允许增删改直接定义以下类型的返回值：
+	int、long、boolean及他们的包装类 和 void
+直接在接口处声明返回值的类型，而不需要在XML里面描写,mybatis会自动处理
+```
+ <!-- public void deleteEmpById(Integer id);  -->
+  <delete id="deleteEmpById">
+  	delete from tb1_employee where id=#{id} 
+  </delete>
+```
+<br>
+
+select的返回类型才是重中之重，其有 resultType 和 resultMap 两种形式。
+### 2、resultType
+resultType很简单，只需要看一下接口的返回值，对应一下就OK了。
+```
+(1)返回POJO，就填POJO的全类名
+  <!-- public Employee getEmpByIdAndLastName(Integer id,String name); -->
+  <select id="getEmpByIdAndLastName" resultType="com.guigu.mybatis.bean.Employee">
+  	select * from tb1_employee where id=#{id} and last_name=#{lastName}
+  </select>
+  
+(2)如果返回的是一个集合，要写集合中元素的类型
+  <!-- public List<Employee> getEmpsByLastNameLike(String lastName); -->
+  <select id="getEmpsByLastNameLike" resultType="com.guigu.mybatis.bean.Employee">
+  	select * from tb1_employee where last_name like #{lastName}
+  </select>
+  
+(3)多条记录封装一个map：返回Map<Integer, POJO>,写POJO的全类名
+  <!-- 
+  //多条记录封装一个map：Map<Integer,Employee>:key是这条记录的主键，值是记录封装后的javaBean
+  //告诉mybatis封装这个map的时候使用哪个属性作为map的key
+  @MapKey("lastName")
+  public Map<Integer,Employee> getEmpByLastNameLikeReturnMap(String lastName); 
+  -->
+  <select id="getEmpByLastNameLikeReturnMap" resultType="com.guigu.mybatis.bean.Employee">
+    select * from tb1_employee where last_name like #{lastName}
+  </select>
+  这个要详细说下，通过传入一个OGNL表达式字符串来模糊匹配获取一系列对象，例如"%e%"，名字中有e的，而显然返回结果一般来说会有很多个
+  对象，这时采用Map来封装的话，就存在一个问题，谁作为map的key，所以通过在方法接口上声明 @MapKey("lastName")来确定POJO的哪个属性作为key
+  
+(4)返回一条记录的map:返回Map<String, Object>,写map(Map类的默认别名)
+//返回一条记录的map，key就是列名，值就是对应的值。
+<!-- public Map<String,Object> getEmpByIdReturnMap(Integer id); -->
+  <select id="getEmpByIdReturnMap" resultType="map">
+  	select * from tb1_employee where id=#{id}
+  </select>
+```
+
+### 3、resultMap
+resultMap，就是提供给我们自定义某个javaBean的封装规则用的<br>
+```
+        <!-- 
+		自定义某个javaBean的封装规则 
+		type：自定义规则的java类型
+		id：唯一id方便引用
+	-->
+	<resultMap type="com.guigu.mybatis.bean.Employee" id="MySimpleEmp">
+		<!-- 指定主键列的封装规则 
+		id定义主键会底层有优化
+		column:指定哪一列
+		property：指定对应的javaBean属性
+		-->
+		<id column="id" property="id"/>
+		<!-- 定义普通列封装规则 -->
+		<result column="last_name" property="lastName"/>
+		<!-- 其他不指定的列会自动封装 ：推荐要写resultMap就把全部的映射规则都写上-->
+		<result column="email" property="email"/>
+		<result column="gender" property="gender"/>
+	</resultMap>
+	
+	<!-- resultMap:自定义结果集映射规则 -->
+	<!-- public Employee getEmpById(Integer id); -->
+	<select id="getEmpById"  resultMap="MySimpleEmp">
+		select * from tbl_employee where id=#{id}
+	</select>
+```
+<br>
+
+接下来讨论两个特殊情况:<br>
+#### 1)对象内嵌着一个普通对象(非集合类、Map)
+场景：
+	查询Employee的同时查询员工对应的部门
+	Employee===Department
+	tbl_employee(id last_name gender d_id) || tbl_dept(did dept_name)
+##### 解决方式1===>联合查询：级联属性封装结果集
+```
+ <resultMap type="com.guigu.mybatis.bean.Employee" id="MyDifEmp">
+ 	<id column="id" property="id"/>
+	<result column="last_name" property="lastName"/>
+	<result column="genger" property="gender" />
+	<result column="did" property="dept.id"/>
+	<result column="dept_name" property="dept.departmentName"/>
+</resultMap>
+<!-- public Employee getEmpAndDept(Integer id); -->
+<select id="getEmpAndDept" resultMap="MyDifEmp">
+	SELECT e.id id,e.last_name last_name,e.gender gender,e.d_id d_id,
+	d.id did,d.dept_name dept_name FROM tbl_employee e LEFT JOIN tbl_dept d 
+	ON e.d_id=d.id WHERE e.id=#{id}
+</select>
+```
+<br>
+
+##### 解决方式2===>使用association定义关联的单个对象的封装规则
+```
+ <resultMap type="com.guigu.mybatis.bean.Employee" id="MyDifEmp2">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="genger" property="gender" />
+		
+		<!-- association可以指定联合的javaBean对象  
+		property="dept",指定哪个属性是联合的对象
+		javaType:指定这个属性对象的类型[不能省略]
+		-->
+		<association property="dept" javaType="com.guigu.mybatis.bean.Department">
+			<id column="did" property="id"/>
+			<result column="dept_name" property="departmentName"/>
+		</association>
+	 </resultMap>
+	 <!-- public Employee getEmpAndDept(Integer id); -->
+	 <select id="getEmpAndDept" resultMap="MyDifEmp2">
+	 	SELECT e.id id,e.last_name last_name,e.gender gender,e.d_id d_id,
+		d.id did,d.dept_name dept_name FROM tbl_employee e LEFT JOIN tbl_dept d 
+		ON e.d_id=d.id WHERE e.id=#{id}
+	 </select>
+```
+
+##### 解决方式2扩展===>分步查询、延迟加载
+使用association进行分步查询<br>
+	1、先按照员工ID查询员工信息<br>
+	2、根据查询员工信息中的d_id值去部门表查出部门信息<br>
+	3、部门设置到员工中；<br>
+```
+	 <!-- id last_name gender d_id did dept_name -->
+	 <resultMap type="com.guigu.mybatis.bean.Employee" id="MyEmpByStep">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="email" property="email"/>
+	 	<result column="gender" property="gender"/>
+	 	<!-- association定义关联对象的封装规则 
+	 		select:表明当前属性是调用select指定的方法查出的结果
+	 		column:指定将哪一列的值传给这个方法
+	 		
+	 		流程：使用select指定的方法（传入column指定的列参数的值）查出对象，并封装给property
+	 	-->
+	 	<association property="dept" 
+	 		select="com.guigu.mybatis.dao.DepartmentMapper.getDeptById"
+	 		column="d_id">
+	 	</association>
+	 </resultMap>
+	 <!-- public Employee getEmpByIdStep(Integer id); -->
+	 <select id="getEmpByIdStep" resultMap="MyEmpDis">
+	 	select * from tbl_employee where id=#{id}
+	 </select>
+```
+<br>
+ 延迟加载(懒加载)的配置：<br>
+ 	
+ 	
+	 
+
+	
