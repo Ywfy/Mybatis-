@@ -634,4 +634,41 @@ _databaseId：如果配置了dataBaseIdProvider标签,
  </sql>
 ```
 
+### 9、discriminator 鉴别器
+```
+<!-- <discriminator javaType=""></discriminator> 
+	   		鉴别器：mybatis可以使用discriminator判断某列的值，然后根据某列的值改变封装行为
+	   		封装Eployee：
+	   			如果查出的是女生，就把部门信息查询出来；
+	   			如果是男生，把last_name这一列的值赋值给email
+	   -->
+	   <resultMap type="com.guigu.mybatis.bean.Employee" id="MyEmpDis">
+	   		<id column="id" property="id"/>
+	 		<result column="last_name" property="lastName"/>
+	 		<result column="email" property="email"/>
+	 		<result column="gender" property="gender"/>
+	   		
+	   		<!-- 
+	   			column:指定要判断的列 
+	   			javaType:列值对应的java类型
+	   		-->
+	   		<discriminator javaType="string" column="gender">
+	   			<!-- 女生   resultType：指定封装的结果类型,不能省略或者resultMap-->
+	   			<case value="0" resultType="com.guigu.mybatis.bean.Employee">
+	   				<association property="dept" 
+	 					select="com.guigu.mybatis.dao.DepartmentMapper.getDeptById"
+	 					column="d_id">
+	 				</association>
+	   			</case>
+	   			<!-- 男生 -->
+	   			<case value="1" resultType="com.guigu.mybatis.bean.Employee">
+	   				<id column="id" property="id"/>
+	 				<result column="last_name" property="lastName"/>
+	 				<result column="last_name" property="email"/>
+	 				<result column="gender" property="gender"/>
+	   			</case>
+	   		</discriminator>
+	   	
+	   </resultMap>
+```
 
