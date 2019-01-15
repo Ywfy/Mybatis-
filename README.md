@@ -6,7 +6,7 @@
   * [mapper文件详解](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br>
       * [自增主键值的获取](https://github.com/Ywfy/Mybatis-/edit/master/mapper/README.md)<br>
       * [mapper参数传递](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br> 
-      * [mapper结果返回]()
+      * [mapper结果返回](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
 
   
 
