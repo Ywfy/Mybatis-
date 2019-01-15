@@ -8,5 +8,6 @@
       * [mapper参数传递](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br> 
       * [mapper结果返回](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
       * [动态SQL](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
-      * [Cache]()
+      * [Cache](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
+  * [SSM整合]()
 
