@@ -314,9 +314,92 @@ resultMap，就是提供给我们自定义某个javaBean的封装规则用的<br
 	 </select>
 ```
 <br>
- 延迟加载(懒加载)的配置：<br>
- 	
+
+延迟加载(懒加载)的配置：<br>
+  之前每次查询Employee对象的时候都是一起将Department查询出来，这对于大型数据库来说无疑是性能的浪费，
+  此时可以通过配置延迟加载的方式来实现，当我们查询员工的部门信息的时候再去查询department
+  延迟加载的配置非常简单，只需要在分布查询的基础上添加两个配置即可
+  来到全局配置文件中，在<settings>标签中添加两个<setting>
+```
+<settings>
+  <setting name="lazyLoadingEnabled" value="true"/> 
+  <setting name="aggressiveLazyLoading" value="false"/> 
+</settings>
+```
+这样就OK了<br>
+
  	
 	 
 
 	
+#### 2)对象内嵌着一个集合类对象
+ 场景:<br>
+	查询部门的时候将部门对应的所有员工信息也查询出来。<br>
+```
+<!-- 
+  public class Department {
+	private Integer id;
+	private String departmentName;
+	private List<Employee> emps;
+did dept_name || eid last_name email gender
+-->
+```
+##### 解决方法1===>collection嵌套结果集的方式：定义关联的集合类型元素的封装规则
+```
+<!-- 嵌套结果集的方式：使用collection标签定义关联的集合类型的属性封装规则 -->
+  	 <resultMap type="com.guigu.mybatis.bean.Department" id="MyDept">
+  	 	<id column="did" property="id"/>
+  	 	<result column="dept_name" property="departmentName"/>
+  	 	<!-- 
+  	 		collection定义关联集合类型的属性的封装规则 
+  	 		ofType指定集合里面元素的类型
+  	 	-->
+  	 	<collection property="emps" ofType="com.guigu.mybatis.bean.Employee">
+  	 		<!-- 定义这个集合中元素的封装规则 -->
+  	 		<id column="eid" property="id"/>
+  	 		<result column="last_name" property="lastName"/>
+  	 		<result column="email" property="email"/>
+  	 		<result column="gender" property="gender"/>
+  	 	</collection>
+  	 </resultMap>
+  	<!-- public Department getDeptByIdPlus(Integer id); -->
+  	<select id="getDeptByIdPlus" resultMap="MyDept">
+  		select d.id did,d.dept_name dept_name,
+			e.id eid,e.last_name last_name,e.email email,
+			e.gender gender 
+		From tbl_dept d LEFT JOIN tbl_employee e
+		ON d.id=e.d_id
+		Where d.id=#{id}
+  	</select>
+```
+<br>
+
+##### 解决方法2===>collection分段查询
+```
+<resultMap type="com.guigu.mybatis.bean.Department" id="MyDeptStep">
+  	<id column="id" property="id"/>
+  	<result column="dept_name" property="departmentName"/>
+  	<collection property="emps" 
+  		select="com.guigu.mybatis.dao.EmployeeMapperPlus.getEmpsByDeptId"
+  		column="{deptId=id}" fetchType="lazy">
+  	</collection>
+  </resultMap>
+  <!-- public Department getDeptByIdStep(Integer ud); -->
+  <select id="getDeptByIdStep" resultMap="MyDeptStep">
+  	select id,dept_name departmentName from tbl_dept where id=#{id}
+  </select>
+```
+扩展：
+传递多列的值的方法===>将多列的值封装给map传递
+```
+column="{key1=column1,key2=column2}"
+```
+fetchType===>非全局定义延迟加载策略
+```
+在内嵌的对象或集合标签上，添加
+fetchType="lazy"：表示使用延迟加载：
+  	- lazy 延迟
+  	- eager 立即
+如果配置它，它将覆盖掉原有在MyBatis设置的全局策略。
+```
+
