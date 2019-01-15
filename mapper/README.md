@@ -13,7 +13,7 @@ MySQL是没问题的，其可以通过方法statement.getGeneratedKeys() 来获�
   ```
   <insert id="addEmp" parameterType="com.guigu.mybatis.bean.Employee"
   	useGeneratedKeys="true" keyProperty="id">
-  	insert into tb1_employee(last_name,email,gender)
+  	insert into tbl_employee(last_name,email,gender)
   	values(#{lastName},#{email},#{gender})
   </insert>
   ```
@@ -56,7 +56,7 @@ Map的value 就是传入的参数值<br>
 ```
 <!-- public Employee getEmpByIdAndLastName(@Param("id")Integer id,@Param("lastName")String lastName); -->
  <select id="getEmpByIdAndLastName" resultType="com.guigu.mybatis.bean.Employee">
-  	select * from tb1_employee where id=#{id} and last_name=#{lastName}
+  	select * from tbl_employee where id=#{id} and last_name=#{lastName}
  </select>
 
 ```
@@ -128,15 +128,15 @@ public Employee getEmpById(List<Integer> ids);
 它们的首要区别是:#{}是线程安全的，是以预编译的形式，将参数设置到sql语句中，PreParedStatement:防止sql注入<br>
                ${}是非线程安全的,取出的值直接拼装在sql语句中，会有安全问题<br>
 ```
-select * from tb1_employee where id=${id} and last_name=#{lastName}
-Preparing: select * from tb1_employee where id=1 and last_name=?
+select * from tbl_employee where id=${id} and last_name=#{lastName}
+Preparing: select * from tbl_employee where id=1 and last_name=?
 ```
 冲着这一点，#{}就应该成为我们的首要选择，而尽量少用${}<br>
 不过在原生JDBC不支持占位符的地方就可以使用${}进行取值<br>
 比如分表：排序....按照年份分表拆分<br>
 ```
 select * from ${year}_salary where xxx;
-select * from tb1_employee order by ${f_name} ${order}
+select * from tbl_employee order by ${f_name} ${order}
 ```
 <br><br>
 
@@ -165,7 +165,7 @@ Mybatis允许增删改直接定义以下类型的返回值：
 ```
  <!-- public void deleteEmpById(Integer id);  -->
   <delete id="deleteEmpById">
-  	delete from tb1_employee where id=#{id} 
+  	delete from tbl_employee where id=#{id} 
   </delete>
 ```
 <br>
@@ -177,13 +177,13 @@ resultType很简单，只需要看一下接口的返回值，对应一下就OK�
 (1)返回POJO，就填POJO的全类名
   <!-- public Employee getEmpByIdAndLastName(Integer id,String name); -->
   <select id="getEmpByIdAndLastName" resultType="com.guigu.mybatis.bean.Employee">
-  	select * from tb1_employee where id=#{id} and last_name=#{lastName}
+  	select * from tbl_employee where id=#{id} and last_name=#{lastName}
   </select>
   
 (2)如果返回的是一个集合，要写集合中元素的类型
   <!-- public List<Employee> getEmpsByLastNameLike(String lastName); -->
   <select id="getEmpsByLastNameLike" resultType="com.guigu.mybatis.bean.Employee">
-  	select * from tb1_employee where last_name like #{lastName}
+  	select * from tbl_employee where last_name like #{lastName}
   </select>
   
 (3)多条记录封装一个map：返回Map<Integer, POJO>,写POJO的全类名
@@ -194,16 +194,16 @@ resultType很简单，只需要看一下接口的返回值，对应一下就OK�
   public Map<Integer,Employee> getEmpByLastNameLikeReturnMap(String lastName); 
   -->
   <select id="getEmpByLastNameLikeReturnMap" resultType="com.guigu.mybatis.bean.Employee">
-    select * from tb1_employee where last_name like #{lastName}
+  	select * from tbl_employee where last_name like #{lastName}
   </select>
   这个要详细说下，通过传入一个OGNL表达式字符串来模糊匹配获取一系列对象，例如"%e%"，名字中有e的，而显然返回结果一般来说会有很多个
   对象，这时采用Map来封装的话，就存在一个问题，谁作为map的key，所以通过在方法接口上声明 @MapKey("lastName")来确定POJO的哪个属性作为key
   
 (4)返回一条记录的map:返回Map<String, Object>,写map(Map类的默认别名)
-//返回一条记录的map，key就是列名，值就是对应的值。
-<!-- public Map<String,Object> getEmpByIdReturnMap(Integer id); -->
+  //返回一条记录的map，key就是列名，值就是对应的值。
+  <!-- public Map<String,Object> getEmpByIdReturnMap(Integer id); -->
   <select id="getEmpByIdReturnMap" resultType="map">
-  	select * from tb1_employee where id=#{id}
+  	select * from tbl_employee where id=#{id}
   </select>
 ```
 
@@ -402,4 +402,236 @@ fetchType="lazy"：表示使用延迟加载：
   	- eager 立即
 如果配置它，它将覆盖掉原有在MyBatis设置的全局策略。
 ```
+
+
+
+<br><br><br>
+## 动态SQL
+### 1、if判断标签
+```
+<if test=""></if> 判断，test内部使用OGNL表达式，从参数中取值进行判断，注意遇见特殊符号应该去写转义字符:
+			&& ==> &amp;&amp;   "" ==> &quot;&quot;<br>
+ <select id="getEmpsByConditionIf" resultType="com.guigu.mybatis.bean.Employee">
+  	select * from tbl_employee where
+ 	<if test="id!=null">
+  		id=#{id}
+ 	</if>
+ <select>
+```
+
+### 2、Trim字符串截取标签
+```
+<!-- public List<Employee> getEmpsByConditionTrim(Employee employee); -->
+  	 <select id="getEmpsByConditionTrim" resultType="com.guigu.mybatis.bean.Employee">
+  	 	select * from tbl_employee
+  	 	<!-- 后面多出的and或者or where标签不能解决 
+  	 	trim标签：trim标签针对的处理对象是标签体中所有SQL语句拼串后的结果
+  	 		prefix="" 加前缀   
+  	 		prefixOverrides="" 前缀覆盖：去掉前面多余的字符
+  	 		suffix="" 加后缀
+  	 		suffixOverrides="" 后缀覆盖，去掉后面多余的字符
+  	 	
+  	 	-->
+  	 	<!-- 自定义SQL语句字符串截取规则 -->
+  	 	<trim prefix="where" suffixOverrides="and">
+  	 		<if test="id!=null">
+  	 			id=#{id} and
+  	 		</if>
+  	 		<if test="lastName!=null &amp;&amp; lastName!=&quot;&quot;">
+  	 			last_name like #{lastName} and
+  	 		</if>
+  	 		<if test="email!=null and email.trim()!=&quot;&quot;">
+  	 			email=#{email} and 
+  	 		</if>
+  	 		<!-- OGNL会进行字符串与数字的转换判断"0"==0 -->
+  	 		<if test="gender==0 or gender==1">
+  	 			gender=#{gender}
+  	 		</if>
+  	 	</trim>
+  	 </select>
+```
+
+### 3、where标签
+where其实就是Trim标签条件限定版，可以帮助我们去除SQL语句 where后面多余的and<br>
+注意：and是放在前面！前面的！
+```
+<!-- 查询员工：要求：携带了哪个字段查询条件就带上这个字段的值 -->
+  	 <!-- public List<Employee> getEmpsByConditionIf(Employee employee); -->
+  	 <select id="getEmpsByConditionIf" resultType="com.guigu.mybatis.bean.Employee">
+  	 	select * from tbl_employee 
+  	 	<!-- where -->
+  	 	<where>
+  	 	<if test="id!=null">
+  	 		id=#{id}
+  	 	</if>
+  	 	<if test="lastName!=null &amp;&amp; lastName!=&quot;&quot;">
+  	 		and last_name like #{lastName}
+  	 	</if>
+  	 	<if test="email!=null and email.trim()!=&quot;&quot;">
+  	 		and email=#{email} 
+  	 	</if>
+  	 	<!-- OGNL会进行字符串与数字的转换判断"0"==0 -->
+  	 	<if test="gender==0 or gender==1">
+  	 		and gender=#{gender}
+  	 	</if>
+  	 	</where>
+  	 </select>
+```
+
+### 4、set标签
+set其实也是Trim标签针对Update语句的限定版，可以帮助我们去除SQL语句 set后面多余的逗号<br>
+注意：逗号(,)是放在后面！后面的！
+```
+ <!-- public void updateEmp(Employee employee); -->
+  	 <update id="updateEmp">
+  	 	<!-- set标签的使用 -->
+  	 	update tbl_employee 
+  		<set>
+  		<if test="lastName!=null">
+  			last_name=#{lastName},
+  		</if>
+  		<if test="email!=null">
+  			email=#{email},
+  		</if>
+  		<if test="gender==0 or gender==1">
+  			gender=#{gender}
+  		</if>
+  		</set> 
+  		<where>
+  			<if test="id!=null">
+  				id=#{id}
+  			</if>
+  		</where> 
+```
+
+### 5、choose when otherwise分支选择标签
+```
+<!-- public List<Employee> getEmpsByConditionChoose(Employee employee); -->
+  	 <select id="getEmpsByConditionChoose" resultType="com.guigu.mybatis.bean.Employee">
+  	 	select * from tbl_employee
+  	 	<where>
+  	 		<!-- 如果带了id就用id查，如果带了lastName就用lastName查；只会进入其中一个 -->
+  	 		<choose>
+  	 			<when test="id!=null">
+  	 				id=#{id}
+  	 			</when>
+  	 			<when test="lastName!=null">
+  	 				last_name like #{lastName}
+  	 			</when>
+  	 			<when test="email!=null">
+  	 				email=#{email}
+  	 			</when>
+  	 			<otherwise>
+  	 				gender=0
+  	 			</otherwise>
+  	 		</choose>
+  	 	</where>
+  	 </select>
+```
+
+### 6、foreach循环遍历标签
+```
+<!-- public List<Employee> getEmpsByConditionForeach(List<Integer> ids); -->
+  	 <select id="getEmpsByConditionForeach" resultType="com.guigu.mybatis.bean.Employee">
+  	 	select * from tbl_employee where id in
+  	 	<!-- 
+  	 		collection:指定要遍历的集合，
+  	 			list类型的参数会特殊处理封装在map中，map的key就叫list
+  	 		item:将遍历出的元素赋值给指定的变量
+  	 		separator:每个元素之间的分隔符
+  	 		open:遍历出所有结果拼接一个开始的字符
+  	 		close:遍历出所有结果拼接一个结束的字符
+  	 		index:索引，遍历list的时候是索引，item是值
+  	 				      遍历map的时候表示map的key，item就是map的值
+  	 		#{变量名}就能取出变量的值也就是当前遍历出的元素
+  	 	 -->
+  	 	<foreach collection="ids" item="item_id" separator=","
+  	 		open="(" close=")" >
+  	 		#{item_id}
+  	 	</foreach>
+  	 </select>
+	 
+
+ <!-- 批量保存 -->
+  	 <!-- public void addEmps(@Param("emps")List<Employee> emps); -->
+  	 <!-- MySQL下批量保存：可以foreach遍历 Mysql支持values(),(),()语法 -->
+  	 <insert id="addEmps">
+  	 	INSERT INTO tbl_employee(
+  	 		<!-- 引用外部定义的sql  -->
+  	 		<include refid="insertColumn">
+  	 			<property name="testColumn" value="abc"/>
+  	 		</include>
+  	 	)
+		VALUES
+		<foreach collection="emps" item="emp" separator=",">
+			(#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dept.id})
+		</foreach>
+  	 </insert> 
+	 
+
+        <!--以下
+	这种方式需要数据库连接属性allowMultiQueries=true ,
+  	这种分号分隔多个sql可以用于其他的批量操作（删除、修改）
+  	 -->
+  	 <!-- <insert id="addEmps">
+  	 	<foreach collection="emps" item="emp" separator=";">
+  	 		INSERT INTO tbl_employee(last_name,email,gender,d_id)
+  	 		values(#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dept.id})
+  	 	</foreach>
+  	 </insert> -->
+  	 
+```
+
+### 7、两个内置参数 
+不只是方法传递过来的参数可以被用来判断，取值。
+```
+mybatis默认还有两个内置参数：
+_parameter:代表整个参数
+	 单个参数：_parameter就是这个参数
+	 多个参数：参数会被封装为一个map，_parameter就是代表这个map
+	 
+_databaseId：如果配置了dataBaseIdProvider标签,
+	 		_databaseId就是代表当前数据库的别名
+
+<!-- 	public List<Employee> getEmpsTestInnerParameter(Employee employee); -->
+	 <select id="getEmpsTestInnerParameter" resultType="com.guigu.mybatis.bean.Employee">
+	 	<!-- bind:可以将OGNL表达式的值绑定到一个变量中，方便以后引用这个变量的值 -->
+	    <bind name="_lastName" value="'_'+lastName+'%'"/> 
+	 	<if test="_databaseId=='mysql'">
+	 		select * from tbl_employee
+	 		<if test="_parameter!=null">
+	 			where last_name like #{lastName}
+	 		</if>
+	 	</if>
+	 	<if test="_databaseId=='oracle'">
+	 		
+	 	</if>
+	 </select>
+```
+
+### 8、SQL代码重用
+```
+<insert id="addEmps">
+  	 INSERT INTO tbl_employee(
+  	 	<!-- 引用外部定义的sql  -->
+  	 	<include refid="insertColumn">
+  	 		<property name="testColumn" value="abc"/>
+  	 	</include>
+  	)
+	VALUES
+	<foreach collection="emps" item="emp" separator=",">
+		(#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dept.id})
+	</foreach>
+</insert> 
+
+ <sql id="insertColumn">
+  	<if test="_databaseId=='mysql'">
+  	 last_name,email,gender,d_id
+  	</if>
+  	 <if test="_databaseId=='oracle'">
+  	 		
+  	 </if>
+ </sql>
+```
+
 
