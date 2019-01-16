@@ -306,7 +306,60 @@ public class EmployeeController {
 <br><br>
 
 
-## 11、配置applicationContext.xml
+## 11、编写数据源配置文件dbconfig.properties
+在conf目录下新建dbconfig.properties
+```
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/Mybatis?allowMultiQueries=true
+jdbc.username=root
+jdbc.password=aA4405821985%
+```
+<br><br>
+
+## 12、编写Mybatis配置文件mybatis-config.xml
+在conf目录下新建mybatis-config.xml文件<br>
+注：开头的<!DOCTYPE XXXXX 是直接copy官网的<br>
+```
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+  <!--
+  		2、settings包含很多重要的设置项
+  		  setting:用来设置每一个设置项
+  		  	name:设置项名	value:设置项取值
+    -->
+  <settings>
+  	<setting name="mapUnderscoreToCamelCase" value="true"/>
+  	<setting name="jdbcTypeForNull" value="NULL" />
+  	
+  	<!-- 显式指定每个我么需要更改的配置的值，即使是默认的，防止版本更新带来的问题 -->
+  	<setting name="cacheEnabled" value="true"/>
+  	<setting name="lazyLoadingEnabled" value="true"/> 
+  	<setting name="aggressiveLazyLoading" value="false"/> 
+  </settings>
+  
+  <!-- 5、databaseIdProvider:支持多数据库厂商  
+  		type="DB_VENDOR",VendorDatabaseIdProvider
+  		作用就是得到数据库厂商的标识（驱动getDatabaseProductName()），
+  			mybatis就能根据数据库厂商标识来执行不同的sql
+  		MySQL  Oracle  SQL Server, xxx
+  -->
+  <databaseIdProvider type="DB_VENDOR">
+        <!-- 为不同的数据库厂商起别名 -->
+  		<property name="MySQL" value="mysql"/>
+  		<property name="Oracle" value="oracle"/>
+  		<property name="SQL Server" value="sql server"/>
+  </databaseIdProvider>
+  
+</configuration>
+```
+<br><br>
+
+
+## 13、配置applicationContext.xml
 在项目根目录下新建conf资源文件夹(Source Folder),专门存放配置文件<br>
 在conf目录下新建Spring Bean Configuration File类型文件，命名为applicationContext.xml<br>
 applicationContext.xml记得引入context、mybatis-spring、tx名称空间<br>
@@ -377,7 +430,7 @@ applicationContext.xml记得引入context、mybatis-spring、tx名称空间<br>
 <br><br>
 
 
-## 12、配置springMVC.xml
+## 14、配置springMVC.xml
 在conf目录下新建Spring Bean Configuration File类型文件，命名为springMVC.xml<br>
 记得引入context、mvc名称空间<br>
 ```
@@ -410,7 +463,7 @@ applicationContext.xml记得引入context、mybatis-spring、tx名称空间<br>
 <br><br>
 
 
-## 13、创建jsp页面
+## 15、创建jsp页面
 在WebContent目录下创建index.jsp<br>
 在/WEB-INF目录下新建pages文件夹,创建list.jsp<br>
 #### index.jsp
@@ -463,7 +516,7 @@ applicationContext.xml记得引入context、mybatis-spring、tx名称空间<br>
 <br><br>
 
 
-## 14、部署Tomcat运行
+## 16、部署Tomcat运行
 右键项目===>Run As===>Run on Server,查看运行效果<br>
 若是尚未部署Tomcat，以下是在Eclipse中部署Tomcat的教程:<br>
 https://jingyan.baidu.com/article/3065b3b6efa9d7becff8a4c6.html<br>
@@ -472,17 +525,20 @@ https://jingyan.baidu.com/article/3065b3b6efa9d7becff8a4c6.html<br>
 
 ## 运行流程
 ```
-1、当我们启动Tomcat运行项目时，会自动访问index.jsp
-2、当我们点击“查询所有员工”后发送/emps请求
-3、Tomcat根据web.xml的配置信息，拦截/emps请求，并交给springDispatcherServlet处理
-4、springDispatcherServlet根据SpringMVC的配置，将请求交给EmployeeController处理，所以这时EmployeeController先要进行实例化
-5、进行EmployeeController的实例化时要注入EmployeeService(其实是自动装配EmployeeServiceImpl，哪怕这里写接口类，若是接口的实现类只有一个，那就会自动地注入这个实现类；若是有多个实现类，则需要进行指定）
-6、EmployeeService实例化时要注入EmployeeMapper
-7、根据applicationContext.xml的配置信息，将EmployeeMapper.java和EmployeeMapper.xml相关联起来
-8、成功实例化EmployeeController后，根据@RequestMapping确定相应的处理逻辑
-9、调用employeeService的getEmps方法，获取到一系列Employee对象放到List中，最后封装到map中
-10、返回逻辑视图list（注意：其实此时也进行了将map中的对象list提取放到request域的操作）
-11、经过视图解析器，逻辑视图list变为物理视图/WEB-INF/pages/list.jsp,然后页面就跳转到物理视图
-12、提取request域中的list，遍历显示信息
+1、当我们启动Tomcat运行项目时
+2、首先创建Spring 的IOC容器，加载applicationContext.xml,创建初始化其中的Bean，此时自然也会初始化数据源，加载数据源配置文件dbconfig.properties
+3、创建SpringMVC的 IOC容器，创建springDispatcherServlet，加载SpringMVC.xml,初始化其中的Bean
+4、mybatis读取mybatis-config.xml的配置信息，确定配置参数
+5、当我们点击“查询所有员工”后发送/emps请求
+6、Tomcat根据web.xml的配置信息，拦截/emps请求，并交给springDispatcherServlet处理
+7、springDispatcherServlet根据SpringMVC的配置，将请求交给EmployeeController处理，所以这时EmployeeController先要进行实例化
+8、进行EmployeeController的实例化时要注入EmployeeService(其实是自动装配EmployeeServiceImpl，哪怕这里写接口类，若是接口的实现类只有一个，那就会自动地注入这个实现类；若是有多个实现类，则需要进行指定）
+9、EmployeeService实例化时要注入EmployeeMapper
+10、根据applicationContext.xml的配置信息，将EmployeeMapper.java和EmployeeMapper.xml相关联起来
+11、成功实例化EmployeeController后，根据@RequestMapping确定相应的处理逻辑
+12、调用employeeService的getEmps方法，获取到一系列Employee对象放到List中，最后封装到map中
+13、返回逻辑视图list（注意：其实此时也进行了将map中的对象list提取放到request域的操作）
+14、经过视图解析器，逻辑视图list变为物理视图/WEB-INF/pages/list.jsp,然后页面就跳转到物理视图
+15、提取request域中的list，遍历显示信息
 ```
 
