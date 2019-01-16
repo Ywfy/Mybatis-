@@ -467,7 +467,7 @@ applicationContext.xml记得引入context、mybatis-spring、tx名称空间<br>
 右键项目===>Run As===>Run on Server,查看运行效果<br>
 若是尚未部署Tomcat，以下是在Eclipse中部署Tomcat的教程:<br>
 https://jingyan.baidu.com/article/3065b3b6efa9d7becff8a4c6.html<br>
-<br?<br>
+<br><br>
 
 
 ## 运行流程
