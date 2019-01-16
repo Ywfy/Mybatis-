@@ -312,7 +312,7 @@ public class EmployeeController {
 jdbc.driver=com.mysql.jdbc.Driver
 jdbc.url=jdbc:mysql://localhost:3306/Mybatis?allowMultiQueries=true
 jdbc.username=root
-jdbc.password=aA4405821985%
+jdbc.password=123456
 ```
 <br><br>
 
