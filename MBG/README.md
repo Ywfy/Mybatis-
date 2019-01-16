@@ -368,7 +368,7 @@ jdbc.password=123456
 
 ### 9、测试代码
 ```
-  @Test
+        @Test
 	public void testMyBatis3() throws IOException {
 		SqlSessionFactory sqlSessionFactory = getSqlSessionFactory();
 		SqlSession openSession = sqlSessionFactory.openSession();
