@@ -286,7 +286,7 @@ public class MyBatisTest {
 		return new SqlSessionFactoryBuilder().build(inputStream);
 	}
   
-  @Test
+        @Test
 	public void testMbg() throws Exception {
 		List<String> warnings = new ArrayList<String>();
 		   boolean overwrite = true;
