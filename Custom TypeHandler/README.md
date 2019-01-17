@@ -194,8 +194,8 @@ public class MyEnumEmpStatusTypeHandler implements TypeHandler<EmpStatus>{
 </typeHandlers>
 注：因为TypeHandler是支持泛型的，所以要通过javaType指定处理类型。
 ```
-
 <br>
+
 #### 2)、在处理某个字段的时候告诉mybatis用什么类型处理器
 
 ```
