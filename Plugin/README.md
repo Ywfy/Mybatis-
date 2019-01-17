@@ -228,6 +228,7 @@ Employee [id=11, lastName=Ellen, email=Ellen@atSG.com, gender=1]
 实际上，非常好理解，代理对象是层层包装的，最初的对象先被一个拦截器包装，包装的结果再被另一个拦截器包装<br>
 至于包装的顺序则是看全局配置文件中插件的配置顺序<br>
 ```
+adsfsdfsdfsdaf
 <!-- plugins:注册插件 -->
   <plugins>
   	<plugin interceptor="com.guigu.mybatis.dao.MyFirstPlugin">
@@ -238,7 +239,7 @@ Employee [id=11, lastName=Ellen, email=Ellen@atSG.com, gender=1]
   	</plugin>
   </plugins>
 ```
-<br>
+
 用图片来进行说明：<br>
-![图片无法加载](https://github.com/Ywfy/Mybatis-/blob/master/Plugin/%E6%8F%92%E4%BB%B6%E6%B5%81%E7%A8%8B.PNG)
+![图片无法加载](https://github.com/Ywfy/Mybatis-/blob/master/Plugin/%E6%8F%92%E4%BB%B6%E6%B5%81%E7%A8%8B.PNG)<br>
 执行的顺序看图也能清楚的明白了，从外到内。
