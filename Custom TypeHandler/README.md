@@ -189,8 +189,8 @@ public class MyEnumEmpStatusTypeHandler implements TypeHandler<EmpStatus>{
 
 ```
 <typeHandlers>
-		<!-- 配置我们自定义的TypeHandler -->
-		<typeHandler handler="com.guigu.mybatis.typehandler.MyEnumEmpStatusTypeHandler" javaType="com.guigu.mybatis.bean.EmpStatus"/>
+	<!-- 配置我们自定义的TypeHandler -->
+	<typeHandler handler="com.guigu.mybatis.typehandler.MyEnumEmpStatusTypeHandler" javaType="com.guigu.mybatis.bean.EmpStatus"/>
 </typeHandlers>
 注：因为TypeHandler是支持泛型的，所以要通过javaType指定处理类型。
 ```
@@ -202,8 +202,8 @@ public class MyEnumEmpStatusTypeHandler implements TypeHandler<EmpStatus>{
 保存:#{empStatus, typeHandler=xxxx}
 查询:
 <resultMap type="com.guigu.mybatis.bean.Employee" id="MyEmp">
-  		<id column="id" property="id"/>
-  		<result column="empStatus" property="empStatus" typeHandler=""/>
+  	<id column="id" property="id"/>
+  	<result column="empStatus" property="empStatus" typeHandler=""/>
 </resultMap>
 注意：如果在参数位置修改TypeHandler，应该保证保存数据和查询数据用的TypeHandler是一样的。
 ```
