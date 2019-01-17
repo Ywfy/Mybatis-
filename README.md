@@ -4,7 +4,7 @@
   * [HelloWorld](https://github.com/Ywfy/Mybatis-/tree/master/HelloWorld)<br>
   * [全局配置文件详解](https://github.com/Ywfy/Mybatis-/blob/master/mybatis-config/README.md)<br>
   * [mapper文件详解](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br>
-      * [自增主键值的获取](https://github.com/Ywfy/Mybatis-/edit/master/mapper/README.md)<br>
+      * [自增主键值的获取](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br>
       * [mapper参数传递](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)<br> 
       * [mapper结果返回](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
       * [动态SQL](https://github.com/Ywfy/Mybatis-/blob/master/mapper/README.md)
