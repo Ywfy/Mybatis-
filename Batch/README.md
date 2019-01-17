@@ -28,7 +28,7 @@ SqlSession openSession  = sqlSessionFactory.openSession(ExecutorType.BATCH);
 @Test
 	public void testBatch() throws IOException {	
 		SqlSessionFactory sqlSessionFactory = getSqlSessionFactory();
-    //记录起始时间
+                //记录起始时间
 		long start = System.currentTimeMillis();
 		//可以执行批量操作的sqlSession
 		SqlSession openSession  = sqlSessionFactory.openSession(ExecutorType.BATCH);
@@ -38,7 +38,7 @@ SqlSession openSession  = sqlSessionFactory.openSession(ExecutorType.BATCH);
 				mapper.addEmp(new Employee(UUID.randomUUID().toString().substring(0, 5),"b","1"));
 			}
 			openSession.commit();
-      //记录结束时间
+                        //记录结束时间
 			long end = System.currentTimeMillis();
 			
 			System.out.println("Used-Time: " + (end-start));
