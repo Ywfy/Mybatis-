@@ -15,4 +15,4 @@
   * [Plugin](https://github.com/Ywfy/Mybatis-/blob/master/Plugin/README.md)
   * [PageHelper](https://github.com/Ywfy/Mybatis-/blob/master/PageHelper/README.md)
   * [Batch](https://github.com/Ywfy/Mybatis-/blob/master/Batch/README.md)
-  * [自定义TypeHandler]()
+  * [自定义TypeHandler](https://github.com/Ywfy/Mybatis-/tree/master/Custom%20TypeHandler)
